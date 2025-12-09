@@ -1,0 +1,60 @@
+name: "Safety SARIF Converter"
+description: "Convert Safety Python dependency scan output to SARIF 2.1.0"
+author: "Your Name"
+
+inputs:
+  input-file:
+    description: "Path to Safety JSON output file (e.g., safety-report.json)"
+    required: true
+  output-file:
+    description: "Path to the SARIF output file (e.g., safety-results.sarif)"
+    required: true
+  tool-version:
+    description: "Safety CLI version (for metadata)"
+    required: false
+    default: "unknown"
+  no-validate:
+    description: "Skip structural SARIF validation"
+    required: false
+    default: "false"
+
+outputs:
+  sarif-file:
+    description: "Path to the generated SARIF file"
+    value: ${{ steps.convert.outputs.sarif-file }}
+  findings-count:
+    description: "Number of findings converted to SARIF"
+    value: ${{ steps.convert.outputs.findings-count }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+
+    - name: Run Safety → SARIF converter
+      id: convert
+      shell: bash
+      run: |
+        python "${GITHUB_ACTION_PATH}/converter.py" \
+          --input "${{ inputs.input-file }}" \
+          --output "${{ inputs.output-file }}" \
+          --tool-name "Safety" \
+          --tool-version "${{ inputs.tool-version }}" \
+          $([ "${{ inputs.no-validate }}" = "true" ] && echo "--no-validate" || echo "")
+
+        echo "sarif-file=${{ inputs.output-file }}" >> "$GITHUB_OUTPUT"
+
+        findings_count=$(python - << 'EOF'
+        import json
+        from pathlib import Path
+        path = Path("${{ inputs.output-file }}")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        runs = data.get("runs", [])
+        results = runs[0].get("results", []) if runs else []
+        print(len(results))
+        EOF
+        )
+        echo "findings-count=$findings_count" >> "$GITHUB_OUTPUT"

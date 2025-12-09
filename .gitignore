@@ -1,0 +1,37 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+.env*/
+.venv/
+.venv*/
+
+# macOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+
+# UV cache (if any)
+.uv/
+
+# Logs
+*.log
+
+# SARIF outputs (examples OK, but ignore real ones)
+*.sarif
+
+# Safety reports (your action will generate these)
+safety-report.json
+
+# Temp files
+*.tmp
+*.bak
+
+# VS Code settings
+.vscode/
