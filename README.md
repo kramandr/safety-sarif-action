@@ -38,7 +38,7 @@ jobs:
           safety check --file=requirements.txt --json > safety-report.json
 
       - name: Convert Safety output to SARIF
-        uses: YOUR-USERNAME/safety-sarif-action@v1
+        uses: kramandr/safety-sarif-action@v1
         with:
           input-file: safety-report.json
           output-file: safety-results.sarif

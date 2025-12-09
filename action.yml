@@ -1,6 +1,6 @@
 name: "Safety SARIF Converter"
 description: "Convert Safety Python dependency scan output to SARIF 2.1.0"
-author: "Your Name"
+author: "Andreas Kramer, Cole EchoHawk"
 
 inputs:
   input-file:
