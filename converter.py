@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Convert Safety output to SARIF.")
     parser.add_argument("--input", required=True, help="Path to Safety JSON output file")
@@ -35,6 +36,7 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
+
 def load_safety_output(path: Path) -> Dict[str, Any]:
     if not path.exists():
         raise FileNotFoundError(f"Input file not found: {path}")
@@ -49,24 +51,13 @@ def load_safety_output(path: Path) -> Dict[str, Any]:
     return data
 
 
-def classify_severity(package: str, vuln_count: int) -> str:
-    pkg = (package or "").lower()
-
-
-    if vuln_count >= 20:
-        return "high"
-    if vuln_count >= 4:
-        return "medium"
-    if vuln_count >= 1:
-        return "low"
-
-    
-    return "low"
-
-
 def _extract_vulnerabilities_from_scan_results(
     data: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
+    """
+    For Safety 3.0>= JSON
+    """
+
     results: List[Dict[str, Any]] = []
 
     scan_results = data.get("scan_results", {})
@@ -100,17 +91,11 @@ def _extract_vulnerabilities_from_scan_results(
 
                     vuln_block = spec.get("vulnerabilities", {}) or {}
                     remediation = vuln_block.get("remediation") or {}
+                    recommended = remediation.get("recommended")
 
                     known = vuln_block.get("known_vulnerabilities", []) or []
-                    if not isinstance(known, list) or not known:
+                    if not isinstance(known, list):
                         continue
-
-                    vuln_count = remediation.get("vulnerabilities_found")
-                    if not isinstance(vuln_count, int):
-                        vuln_count = len(known)
-
-                    severity_str = classify_severity(name, vuln_count)
-                    recommended = remediation.get("recommended")
 
                     for kv in known:
                         vuln_id = str(kv.get("id", "UNKNOWN"))
@@ -126,7 +111,7 @@ def _extract_vulnerabilities_from_scan_results(
                             "installed_version": version,
                             "vulnerability_id": vuln_id,
                             "advisory": advisory,
-                            "severity": severity_str,
+                            "severity": "medium",
                         }
 
                         if recommended:
@@ -138,17 +123,27 @@ def _extract_vulnerabilities_from_scan_results(
 
 
 def get_vulnerabilities(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    For JSON 1.1 
+    """
     raw_vulns = data.get("vulnerabilities")
     if isinstance(raw_vulns, list):
         return [v for v in raw_vulns if isinstance(v, dict)]
 
+    # New Safety 3.x format:
     return _extract_vulnerabilities_from_scan_results(data)
 
 
 def parse_safety_vulnerability(
     v: Dict[str, Any]
 ) -> Tuple[str, str, str, str, str, str, List[str], List[str], float]:
-    
+    """
+    Extract normalized fields from a Safety vulnerability dict.
+
+    We defensively probe multiple possible key names since Safety's JSON
+    can change slightly between versions.
+    """
+
     package = (
         v.get("package_name")
         or v.get("package")
@@ -179,6 +174,7 @@ def parse_safety_vulnerability(
 
     severity = (v.get("severity") or "").lower() or "medium"
 
+    # fixed_versions may be list or string or missing
     fixed_versions = v.get("fixed_versions") or v.get("fix_version") or []
     if isinstance(fixed_versions, str):
         fixed_versions = [fixed_versions]
@@ -221,11 +217,6 @@ def parse_safety_vulnerability(
 def map_severity_to_level(severity: str, cvss_score: float = -1.0) -> str:
     """
     Map Safety severity / CVSS score to SARIF levels: error | warning | note.
-
-    GitHub interprets these as:
-      - "error"   -> High
-      - "warning" -> Medium
-      - "note"    -> Low
     """
     s = (severity or "").lower()
 
@@ -236,6 +227,7 @@ def map_severity_to_level(severity: str, cvss_score: float = -1.0) -> str:
     if 0.0 <= cvss_score < 4.0:
         return "note"
 
+    # Fallback on string severity if CVSS is not available
     if s in {"critical", "high"}:
         return "error"
     if s in {"medium", "moderate"}:
@@ -298,6 +290,7 @@ def map_safety_to_sarif_results_and_rules(
         level = map_severity_to_level(severity, cvss_score)
         sec_sev = map_severity_to_security_severity(severity, cvss_score)
 
+        # ----- result entry -----
         properties: Dict[str, Any] = {
             "package": package,
             "installed_version": installed_version,
@@ -321,7 +314,7 @@ def map_safety_to_sarif_results_and_rules(
             "locations": [
                 {
                     "physicalLocation": {
-                        
+                        # Safety is dependency-level, so we use a pseudo-path.
                         "artifactLocation": {"uri": f"dependencies/{package}"},
                         "region": {
                             "startLine": 1,
@@ -334,6 +327,7 @@ def map_safety_to_sarif_results_and_rules(
         }
         results.append(result)
 
+        # ----- rule entry (one per vulnerability id) -----
         if rule_id not in rules_by_id:
             short_text = description if len(description) <= 120 else description[:117] + "..."
             rule = {
