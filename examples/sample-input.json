@@ -1,94 +1,58 @@
-﻿
-
-+===========================================================================================================================================================================================+
-
-
-DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
-
-
-We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
-
-
-+===========================================================================================================================================================================================+
-
-
 {
-    "report_meta": {
-        "scan_target": "files",
-        "scanned": [
-            "requirements.txt"
-        ],
-        "scanned_full_path": [
-            "C:\\Users\\andre\\Documents\\Fall 2025\\safety-sarif-action\\safety-demo\\requirements.txt"
-        ],
-        "target_languages": [
-            "python"
-        ],
-        "policy_file": null,
-        "policy_file_source": "local",
-        "audit_and_monitor": false,
-        "api_key": false,
-        "account": "",
-        "local_database_path": null,
-        "safety_version": "3.7.0",
-        "timestamp": "2025-12-08 23:32:05",
-        "packages_found": 0,
-        "vulnerabilities_found": 0,
-        "vulnerabilities_ignored": 0,
-        "remediations_recommended": 0,
-        "telemetry": {
-            "safety_options": {
-                "files": {
-                    "--file": 1
+  "scan_results": {
+    "projects": [
+      {
+        "files": [
+          {
+            "results": {
+              "dependencies": [
+                {
+                  "name": "requests",
+                  "specifications": [
+                    {
+                      "raw": "requests==2.19.0",
+                      "vulnerabilities": {
+                        "known_vulnerabilities": [
+                          {
+                            "id": "12345",
+                            "severity": "high",
+                            "cvss_score": 7.5,
+                            "vulnerable_spec": "<=2.19.0",
+                            "description": "Requests before 2.20 allowed credential leak.",
+                            "cve_ids": ["CVE-2018-18074"],
+                            "cwe_ids": ["CWE-522"]
+                          }
+                        ]
+                      }
+                    }
+                  ]
                 },
-                "json": {
-                    "--json": 1
+                {
+                  "name": "pyyaml",
+                  "specifications": [
+                    {
+                      "raw": "pyyaml==5.1",
+                      "vulnerabilities": {
+                        "known_vulnerabilities": [
+                          {
+                            "id": "67890",
+                            "severity": "medium",
+                            "cvss_score": 5.3,
+                            "vulnerable_spec": "<=5.1",
+                            "description": "Arbitrary code execution due to unsafe loader.",
+                            "cve_ids": ["CVE-2020-1747"],
+                            "cwe_ids": ["CWE-94"]
+                          }
+                        ]
+                      }
+                    }
+                  ]
                 }
-            },
-            "safety_version": "3.7.0",
-            "safety_source": "cli",
-            "os_type": "Windows",
-            "os_release": "11",
-            "os_description": "Windows-11-10.0.26100-SP0",
-            "python_version": "3.12.8",
-            "safety_command": "check"
-        },
-        "git": {
-            "branch": "main",
-            "tag": "",
-            "commit": "d9c5ce1ef0b70b0b75c877fa50302f1957598bc2",
-            "dirty": "True",
-            "origin": "https://github.com/kramandr/safety-sarif-action.git"
-        },
-        "project": null,
-        "json_version": "1.1",
-        "remediations_attempted": 0,
-        "remediations_completed": 0,
-        "remediation_mode": "NON_INTERACTIVE"
-    },
-    "scanned_packages": {},
-    "affected_packages": {},
-    "announcements": [],
-    "vulnerabilities": [],
-    "ignored_vulnerabilities": [],
-    "remediations": {},
-    "remediations_results": {
-        "vulnerabilities_fixed": [],
-        "remediations_applied": {},
-        "remediations_skipped": {}
-    }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
 }
-
-
-+===========================================================================================================================================================================================+
-
-
-DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
-
-
-We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
-
-
-+===========================================================================================================================================================================================+
-
-
