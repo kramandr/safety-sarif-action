@@ -4,9 +4,9 @@ This action converts [Safety](https://github.com/pyupio/safety) Python dependenc
 
 ## Inputs
 
-- `input-file` (required): Path to the Safety JSON output file (e.g. `safety-report.json`).
-- `output-file` (required): Path to the SARIF file to write (e.g. `safety-results.sarif`).
-- `tool-version` (optional): Safety CLI version (for metadata).
+- `input-file`: Path to the Safety JSON output file (e.g. `safety-report.json`).
+- `output-file`: Path to the SARIF file to write (e.g. `safety-results.sarif`).
+- `tool-version`: Safety CLI version (for metadata).
 
 ## Outputs
 
