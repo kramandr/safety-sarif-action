@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Safety",
+          "version": "3.7.0",
+          "informationUri": "https://github.com/pyupio/safety",
+          "rules": [
+            {
+              "id": "SAFETY-12345",
+              "name": "12345",
+              "shortDescription": {
+                "text": "Requests before 2.20 allowed credential leak."
+              },
+              "fullDescription": {
+                "text": "Requests before 2.20 allowed credential leak."
+              },
+              "help": {
+                "text": "Upgrade the affected package to a non-vulnerable version or apply the recommended remediation."
+              },
+              "properties": {
+                "tags": ["security", "dependency", "python", "safety"],
+                "precision": "high",
+                "security-severity": "7.5"
+              }
+            },
+            {
+              "id": "SAFETY-67890",
+              "name": "67890",
+              "shortDescription": {
+                "text": "Arbitrary code execution due to unsafe loader."
+              },
+              "fullDescription": {
+                "text": "Arbitrary code execution due to unsafe loader."
+              },
+              "help": {
+                "text": "Upgrade the affected package to a safe version."
+              },
+              "properties": {
+                "tags": ["security", "dependency", "python", "safety"],
+                "precision": "high",
+                "security-severity": "5.3"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "SAFETY-12345",
+          "level": "error",
+          "message": {
+            "text": "requests unknown-version: Requests before 2.20 allowed credential leak."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dependencies/requests"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "package": "requests",
+            "installed_version": "unknown-version",
+            "original_severity": "high",
+            "cve_ids": ["CVE-2018-18074"],
+            "cwe_ids": ["CWE-522"],
+            "cvss_score": 7.5
+          }
+        },
+        {
+          "ruleId": "SAFETY-67890",
+          "level": "warning",
+          "message": {
+            "text": "pyyaml unknown-version: Arbitrary code execution due to unsafe loader."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dependencies/pyyaml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "package": "pyyaml",
+            "installed_version": "unknown-version",
+            "original_severity": "medium",
+            "cve_ids": ["CVE-2020-1747"],
+            "cwe_ids": ["CWE-94"],
+            "cvss_score": 5.3
+          }
+        }
+      ]
+    }
+  ]
+}
