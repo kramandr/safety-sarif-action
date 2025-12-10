@@ -51,14 +51,87 @@ def load_safety_output(path: Path) -> Dict[str, Any]:
     return data
 
 
+def _extract_vulnerabilities_from_scan_results(
+    data: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """
+    For Safety 3.0>= JSON
+    """
+
+    results: List[Dict[str, Any]] = []
+
+    scan_results = data.get("scan_results", {})
+    projects = scan_results.get("projects", [])
+    if not isinstance(projects, list):
+        return results
+
+    for project in projects:
+        files = project.get("files", [])
+        if not isinstance(files, list):
+            continue
+
+        for file_entry in files:
+            dep_results = (
+                file_entry.get("results", {}).get("dependencies", [])
+            )
+            if not isinstance(dep_results, list):
+                continue
+
+            for dep in dep_results:
+                name = dep.get("name") or "unknown-package"
+                specs = dep.get("specifications", [])
+                if not isinstance(specs, list):
+                    continue
+
+                for spec in specs:
+                    raw = spec.get("raw", "")
+                    version = "unknown-version"
+                    if "==" in raw:
+                        _, version = raw.split("==", 1)
+
+                    vuln_block = spec.get("vulnerabilities", {}) or {}
+                    remediation = vuln_block.get("remediation") or {}
+                    recommended = remediation.get("recommended")
+
+                    known = vuln_block.get("known_vulnerabilities", []) or []
+                    if not isinstance(known, list):
+                        continue
+
+                    for kv in known:
+                        vuln_id = str(kv.get("id", "UNKNOWN"))
+                        vuln_spec = kv.get("vulnerable_spec", "")
+
+                        advisory = (
+                            f"{name} {version} is affected "
+                            f"(matches vulnerable spec '{vuln_spec}')"
+                        )
+
+                        vdict: Dict[str, Any] = {
+                            "package_name": name,
+                            "installed_version": version,
+                            "vulnerability_id": vuln_id,
+                            "advisory": advisory,
+                            "severity": "medium",
+                        }
+
+                        if recommended:
+                            vdict["fixed_versions"] = [recommended]
+
+                        results.append(vdict)
+
+    return results
+
+
 def get_vulnerabilities(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
-    Safety JSON (json_version 1.1) has a top-level 'vulnerabilities' array.
+    For JSON 1.1 
     """
-    raw_vulns = data.get("vulnerabilities", [])
-    if not isinstance(raw_vulns, list):
-        return []
-    return [v for v in raw_vulns if isinstance(v, dict)]
+    raw_vulns = data.get("vulnerabilities")
+    if isinstance(raw_vulns, list):
+        return [v for v in raw_vulns if isinstance(v, dict)]
+
+    # New Safety 3.x format:
+    return _extract_vulnerabilities_from_scan_results(data)
 
 
 def parse_safety_vulnerability(
